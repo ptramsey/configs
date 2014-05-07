@@ -3,7 +3,8 @@ import XMonad.Hooks.EwmhDesktops (ewmh)
 import XMonad.Hooks.FadeInactive
 import XMonad.Actions.CopyWindow
 import XMonad.Config.Desktop (desktopLayoutModifiers)
-import XMonad.Config.Gnome
+-- import XMonad.Config.Gnome
+import XMonad.Config.Kde
 import XMonad.Layout
 import XMonad.Layout.NoBorders (lessBorders, Ambiguity(Screen))
 import XMonad.Layout.PerWorkspace
@@ -35,6 +36,7 @@ myManager = composeAll
 --    [ isEmpathy --> moveToIM
     [ ( className =? "Pidgin" ) --> doShift "1"
     , ( className =? "Steam" ) --> doShift "9"
+    , ( resource =? "plasma-desktop" ) --> doFloat
     ]
   where
     role = stringProperty "WM_WINDOW_ROLE"
@@ -47,11 +49,11 @@ myLogHook :: X ()
 myLogHook = fadeInactiveLogHook fadeAmount
     where fadeAmount = 0.8
 
-main = xmonad $ ewmh $ gnomeConfig 
+main = xmonad $ emwh $ kdeConfig
     {   focusedBorderColor  = "#006600" 
-    --,   normalBorderColor   = "#FFFFFF" 
+    ,   normalBorderColor   = "#FFFFFF" 
     ,   layoutHook          = lessBorders Screen $ desktopLayoutModifiers(myLayout)
-    ,   manageHook          = myManager <+> manageHook gnomeConfig
+    ,   manageHook          = myManager <+> manageHook kdeConfig
     ,   terminal            = "terminator"
     ,   logHook             = myLogHook
     }
