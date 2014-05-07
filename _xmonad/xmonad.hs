@@ -1,6 +1,7 @@
 import XMonad
-import XMonad.Hooks.EwmhDesktops (ewmh)
+import XMonad.Hooks.EwmhDesktops (ewmh, ewmhDesktopsStartup)
 import XMonad.Hooks.FadeInactive
+import XMonad.Hooks.SetWMName
 import XMonad.Actions.CopyWindow
 import XMonad.Config.Desktop (desktopLayoutModifiers)
 -- import XMonad.Config.Gnome
@@ -49,7 +50,7 @@ myLogHook :: X ()
 myLogHook = fadeInactiveLogHook fadeAmount
     where fadeAmount = 0.8
 
-main = xmonad $ emwh $ kdeConfig
+myConf = ewmh kdeConfig
     {   focusedBorderColor  = "#006600" 
     ,   normalBorderColor   = "#FFFFFF" 
     ,   layoutHook          = lessBorders Screen $ desktopLayoutModifiers(myLayout)
@@ -57,3 +58,9 @@ main = xmonad $ emwh $ kdeConfig
     ,   terminal            = "terminator"
     ,   logHook             = myLogHook
     }
+
+
+main = xmonad myConf
+    {   startupHook         = startupHook myConf >> setWMName "LG3D"
+    }
+-- main = xmonad $ kdeConfig 
