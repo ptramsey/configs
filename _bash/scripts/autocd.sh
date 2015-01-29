@@ -4,7 +4,7 @@ pushd() {
 
 up() {
     test -z "$1" && set 1
-    if [ "$1" -gt 0 ]; then
+    if test "$1" -gt 0; then
         up $(( $1 - 1 )) "../$2"
     else
         pushd "$2" >/dev/null
