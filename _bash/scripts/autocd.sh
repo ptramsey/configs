@@ -43,18 +43,28 @@ alias u=up
 alias f=forwards
 
 prep_autocd() {
-    test "$1" = '~' && dir="${HOME}" || dir="$1"
-    command -v "$dir" >/dev/null || ! test -d "$dir" || test -n "$_stderr_temp" && return 0;
-    echo -e "\033[01;32mautocd:\033[0m $(readlink -f "$dir")";
-    exec {_stderr_temp}>&2;
-    exec 2>/dev/null;
+    test "$1" = '~' && set "${HOME}"
+
+    if ! command -v "$1" >/dev/null && test -d "$1" && test -z "$_autocd_dir"; then
+        echo -e "\033[01;32mautocd:\033[0m $(readlink -f "$1")";
+
+        _autocd_dir="$1"
+
+        # Hide output from unsuccessful command
+        exec {_autocd_stderr}>&2;
+        exec 2>/dev/null;
+    fi
 }
 
 autocd() {
-    if test -n "$_stderr_temp"; then
-        exec 2>&$_stderr_temp-;
-        cd "$dir";
-        unset _stderr_temp;
+    if test -n "$_autocd_dir"; then
+        # Unblock stderr
+        test -n "$_autocd_stderr" && exec 2>&$_autocd_stderr-;
+        
+        cd "$_autocd_dir";
+
+        unset _autocd_stderr;
+        unset _autocd_dir
     fi
 }
 
