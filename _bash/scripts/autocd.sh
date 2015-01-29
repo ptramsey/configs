@@ -1,3 +1,7 @@
+pushd() {
+    command pushd "$@" && unset _forwards
+}
+
 up() {
     [ -z "$1" ] && level=1 || level="$1"
     if [ "$level" -gt 0 ]; then
@@ -5,14 +9,6 @@ up() {
     else
         pushd "$2" >/dev/null
     fi
-}
-
-cd() {
-    case $1 in
-        -) test -n "$_forwards" && forwards || back ;;
-        "") pushd ~ >/dev/null && unset _forwards ;;
-        *) pushd "$1" >/dev/null && unset _forwards;;
-    esac
 }
 
 back() {
@@ -30,8 +26,16 @@ forwards() {
             echo "Forward history empty." >&2
             return 1
         fi
-        pushd "${_forwards[-1]}" >/dev/null && unset _forwards[-1] && forwards $(($1 - 1))
+        command pushd "${_forwards[-1]}" >/dev/null && unset _forwards[-1] && forwards $(($1 - 1))
     fi
+}
+
+cd() {
+    case $1 in
+        -) test -n "$_forwards" && forwards || back ;;
+        "") pushd ~ >/dev/null ;;
+        *) pushd "$1" >/dev/null ;;
+    esac
 }
 
 alias b=back
