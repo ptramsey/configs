@@ -42,18 +42,27 @@ alias b=back
 alias u=up
 alias f=forwards
 
-precmd() {
-    command -v "$1" >/dev/null || ! test -d "$1" || test -n "$_stderr_temp" && return 0;
-    echo -e "\033[01;32mautocd:\033[0m $(readlink -f "$1")";
-    cd "$1";
+autocd() {
+    test "$1" = '~' && dir="${HOME}" || dir="$1"
+    command -v "$dir" >/dev/null || ! test -d "$dir" || test -n "$_stderr_temp" && return 0;
+    echo -e "\033[01;32mautocd:\033[0m $(readlink -f "$dir")";
+    cd "$dir";
     exec {_stderr_temp}>&2;
     exec 2>/dev/null;
 }
 
-errcmd() {
+post_autocd() {
     test -n "$_stderr_temp" && exec 2>&$_stderr_temp-;
     unset _stderr_temp;
 }
 
-trap 'precmd $BASH_COMMAND' DEBUG
-trap 'errcmd $BASH_COMMAND' ERR
+debug_hook() {
+    autocd "$@"
+}
+
+err_hook() {
+    post_autocd "$@"
+}
+
+trap 'debug_hook $BASH_COMMAND' DEBUG
+trap 'err_hook $BASH_COMMAND' ERR
