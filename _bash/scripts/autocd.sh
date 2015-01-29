@@ -3,9 +3,9 @@ pushd() {
 }
 
 up() {
-    [ -z "$1" ] && level=1 || level="$1"
-    if [ "$level" -gt 0 ]; then
-        up $(( level - 1 )) "../$2"
+    test -z "$1" && set 1
+    if [ "$1" -gt 0 ]; then
+        up $(( $1 - 1 )) "../$2"
     else
         pushd "$2" >/dev/null
     fi
