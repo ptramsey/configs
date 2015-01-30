@@ -26,8 +26,11 @@ forwards() {
             echo "Forward history empty." >&2
             return 1
         fi
+
         len="${#_forwards[@]}"
-        command pushd "${_forwards[$len-1]}" >/dev/null && unset _forwards[$len-1] && forwards $(($1 - 1))
+        command pushd "${_forwards[$len-1]}" >/dev/null &&
+            unset _forwards[$len-1] &&
+            forwards $(($1 - 1))
     fi
 }
 
