@@ -72,13 +72,13 @@ autocd() {
     fi
 }
 
-split_args() {
-    args="$1"
+parse_argv() {
+    argv="$1"
     bash -c 'split() { while test -n "$1"; do echo "$1"; shift; done; }; '"split $args"
 }
 
 autocd_hook() {
-    prep_autocd "$(split_args "$*" | head -n1)"
+    prep_autocd "$(parse_argv "$*" | head -n1)"
 }
 
 trap 'autocd_hook "$BASH_COMMAND"' DEBUG
