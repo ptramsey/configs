@@ -72,13 +72,14 @@ autocd() {
     fi
 }
 
-debug_hook() {
-    prep_autocd "$@"
+split_args() {
+    args="$1"
+    bash -c 'split() { while test -n "$1"; do echo "$1"; shift; done; }; '"split $args"
 }
 
-err_hook() {
-    autocd "$@"
+autocd_hook() {
+    prep_autocd "$(split_args "$*" | head -n1)"
 }
 
-trap 'debug_hook $BASH_COMMAND' DEBUG
-trap 'err_hook $BASH_COMMAND' ERR
+trap 'autocd_hook "$BASH_COMMAND"' DEBUG
+PROMPT_COMMAND="autocd;${PROMPT_COMMAND}"
