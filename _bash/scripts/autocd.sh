@@ -22,9 +22,9 @@
 # Implements a forwards and reverse directory history on top of bash, along 
 # with a version of autocd that respects it.  Commands defined here:
 #
-# up [N] - jump up N levels (1 if omitted) in the directory hierarchy
-# back|b [n] - go back N directories (1 if omitted)
-# forward|f [n] - go forward N directories (1 if omitted)
+# u[p] [N] - jump up N levels (1 if omitted) in the directory hierarchy
+# b[ack] [n] - go back N directories (1 if omitted)
+# f[orwards] [n] - go forward N directories (1 if omitted)
 # cd [DIR|~|-] - behaves like cd, but stores a directory history
 # [DIR|~] - Automatically cd to DIR (or ~) if DIR is not already the name
 #           of a command
