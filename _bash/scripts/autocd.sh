@@ -74,7 +74,7 @@ autocd() {
 
 parse_argv() {
     argv="$1"
-    bash -c 'split() { while test -n "$1"; do echo "$1"; shift; done; }; '"split $args"
+    bash -c 'split() { while test -n "$1"; do echo "$1"; shift; done; }; '"split $argv"
 }
 
 autocd_hook() {
