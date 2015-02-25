@@ -106,17 +106,13 @@ prep_autocd() {
 }
 
 autocd() {
-    # If we are automatically changing directory,
-    if test -n "$_autocd_dir"; then
-        # unblock stderr,
-        test -n "$_autocd_stderr" && exec 2>&$_autocd_stderr-;
-        
-        # and perform the actual cd.
-        cd "$_autocd_dir";
+    # If we are automatically changing directory, do so now
+    test -n "$_autocd_dir" && cd "$_autocd_dir"
+    unset _autocd_dir
 
-        unset _autocd_stderr;
-        unset _autocd_dir
-    fi
+    # unblock stderr
+    test -n "$_autocd_stderr" && exec 2>&$_autocd_stderr-
+    unset _autocd_stderr
 }
 
 # $BASH_COMMAND is the actual literal command the user entered (including backslashes
