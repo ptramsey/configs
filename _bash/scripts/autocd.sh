@@ -42,7 +42,7 @@ pushd() {
 
 # Jump up N levels in the directory hierarchy.
 up() {
-    test -z "$1" && set 1
+    test -n "$1" || set 1
     if test "$1" -gt 0; then
         up $(( $1 - 1 )) "../$2"
     else
@@ -52,7 +52,7 @@ up() {
 
 # Jump back N directories.
 back() {
-    test -z "$1" && set 1
+    test -n "$1" || set 1
     if test "$1" -gt 0; then
         oldcwd=$(pwd)
         popd >/dev/null && _forwards+=("$oldcwd") && back $(($1 - 1))
@@ -61,7 +61,7 @@ back() {
 
 # Jump forwards N directories.
 forwards() {
-    test -z "$1" && set 1
+    test -n "$1" || set 1
     if test "$1" -gt 0; then
         if test  "${#_forwards[@]}" -eq 0; then
             echo "Forward history empty." >&2
