@@ -116,15 +116,16 @@ autocd() {
 }
 
 # $BASH_COMMAND is the actual literal command the user entered (including backslashes
-# and quotes), so there's no way to know what the actual command name is without
-# handing it off to another instance of bash to parse any escaped or quoted spaces.
+# and quotes), so there's no way to know what the actual command name is.  xargs word
+# parsing isn't the same as bash word parsing, but it's probably close enough for our
+# purposes (the alternative of handing this off to a subshell is dangerous because 
+# parsing the command that way may cause embedded subcommands to be executed early)
 parse_argv() {
-    argv="$1"
-    bash -c 'split() { while test -n "$1"; do echo "$1"; shift; done; }; '"split $argv"
+    echo "$1" | xargs printf '%s\0'
 }
 
 autocd_hook() {
-    prep_autocd "$(parse_argv "$*" | head -n1)"
+    prep_autocd "$(parse_argv "$*" | cut -d '' -f 1)"
 }
 
 trap 'autocd_hook "$BASH_COMMAND"' DEBUG
