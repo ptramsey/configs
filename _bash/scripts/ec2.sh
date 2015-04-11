@@ -45,7 +45,7 @@ ec2() {
     options=()
     query='Reservations[*].Instances[*].[InstanceId,State.Name,PublicDnsName]'
     starting=
-    username=$(whoami)
+    username=${DEFAULT_EC2_USERNAME:-$(whoami)}
     wait_time=2
 
     test -z "$*" && { _ec2_usage; return 1; }
