@@ -22,6 +22,7 @@ ec2() {
     query='Reservations[*].Instances[*].[InstanceId,State.Name,PublicDnsName]'
     starting=
     username=$(whoami)
+    wait_time=2
 
     test -z "$*" && { _ec2_usage; return 1; }
 
@@ -69,7 +70,7 @@ ec2() {
             if test -n "$starting"; then
                 echo "Instance started.  Trying to connect..."
                 for i in {0..10}; do
-                    sleep 2
+                    sleep $wait_time
                     ssh -q "${options[@]}" true && break
                 done
                 if test $? -ne 0; then
@@ -87,7 +88,7 @@ ec2() {
             starting=1
             ;&
         pending)
-            sleep 2
+            sleep $wait_time
             echo -n "."
             ;;
         *)
