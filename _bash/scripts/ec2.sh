@@ -25,10 +25,8 @@
 
 # Parses the openssh client's usage information to produce an option string for 'getopt'
 _get_ssh_args() {
-    local ssh_usage=$(ssh 2>&1)
-
-    printf '%s\n' $ssh_usage | sed -n '/^\[-\w$/ s/^\[-\(\w\)/\1:/p
-                                       /^\[-\w\w/ s/[][-]//g p' | tr -d '\n'
+    printf '%s\n' $(ssh 2>&1) | sed -n '/^\[-\w$/ s/^\[-\(\w\)/\1:/p
+                                        /^\[-\w\w/ s/[][-]//g p' | tr -d '\n'
     echo
 }
 
