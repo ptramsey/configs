@@ -85,10 +85,7 @@ _wait_for_ssh() {
         sleep $wait_time
         ssh -q "${options[@]}" true && break
     done
-    if test $? -ne 0; then
-        echo >&2 "Timed out waiting to connect"
-        return 1
-    fi
+    ssh "${options[@]}" true
 }
 
 # SSH workalike.  Finds the instance, turns it on iff it's powered off, then connects
