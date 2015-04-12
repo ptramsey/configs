@@ -150,3 +150,12 @@ ec2() {
         esac
     done
 }
+
+# Set an instance's Name tag
+ec2-setname() {
+    if test $# -ne 2 -o ${1:0:2} != "i-"; then
+        echo >&2 "Usage: ${FUNCNAME[0]} INSTANCE_ID NAME";
+        return 1;
+    fi
+    aws ec2 create-tags --resources "$1" --tags Key=Name,Value="$2"
+}
