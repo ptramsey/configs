@@ -138,10 +138,11 @@ ec2() {
             ;;
         stopped)
             aws ec2 start-instances --instance-ids $instance_id >/dev/null
-            echo -n "Starting $instance_name..."
-            starting=1
             ;&
         pending)
+            test -n "$starting" || echo -n "Starting $instance_name..."
+            starting=1
+
             sleep $wait_time
             echo -n "."
             ;;
