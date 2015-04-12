@@ -27,12 +27,8 @@
 _get_ssh_args() {
     local ssh_usage=$(ssh 2>&1)
 
-    # No argument options
-    printf '%s\n' $ssh_usage | egrep '\[-..' | sed 's/[][-]//g' | tr -d '\n'
-
-    # Options with arguments
-    printf '%s\n' $ssh_usage | egrep '\[-.$' | sed 's/^\[-\(\w\)/\1:/' | tr -d '\n'
-
+    printf '%s\n' $ssh_usage | sed -n '/^\[-\w$/ s/^\[-\(\w\)/\1:/p
+                                       /^\[-\w\w/ s/[][-]//g p' | tr -d '\n'
     echo
 }
 
