@@ -49,12 +49,13 @@ _ec2_usage() {
 
 # Fetch instance information from the ec2 api.  Fail if more than one matching instance is found.
 _ec2_get_instance() {
-    query="Reservations[*].Instances[*].[InstanceId,\
-                                         InstanceType,\
-                                         Placement.AvailabilityZone,\
-                                         State.Name,\
-                                         PublicDnsName]"
-    instance_name="$1"
+    local query="Reservations[*].Instances[*].[InstanceId,\
+                                               InstanceType,\
+                                               Placement.AvailabilityZone,\
+                                               State.Name,\
+                                               PublicDnsName]"
+    local instance_name="$1"
+    local instances
 
     IFS=$'\n' read -d '' -r -a instances < <(
         aws ec2 describe-instances --filters Name=tag:Name,Values="$instance_name" \
@@ -79,13 +80,25 @@ _ec2_get_instance() {
     echo "${instances[0]}"
 }
 
+_wait_for_ssh() {
+    for i in {0..10}; do
+        sleep $wait_time
+        ssh -q "${options[@]}" true && break
+    done
+    if test $? -ne 0; then
+        echo >&2 "Timed out waiting to connect"
+        return 1
+    fi
+}
+
 # SSH workalike.  Finds the instance, turns it on iff it's powered off, then connects
 # to it.
 ec2() {
-    options=()
-    starting=
-    username=${DEFAULT_EC2_USERNAME:-$(whoami)}
-    wait_time=2
+    local options=()
+    local starting=
+    local username=${DEFAULT_EC2_USERNAME:-$(whoami)}
+    local wait_time=2
+    local instance instance_name instance_id size az state hostname
 
     test -z "$*" && { _ec2_usage; return; }
 
@@ -113,19 +126,14 @@ ec2() {
             printf '\r%100s\r'
 
             options+=("${username}@${hostname}")
+
             if test -n "$starting"; then
                 echo "Instance started.  Trying to connect..."
-                for i in {0..10}; do
-                    sleep $wait_time
-                    ssh -q "${options[@]}" true && break
-                done
-                if test $? -ne 0; then
-                    echo "Timed out waiting to connect"
-                    return 1
-                fi
+                _wait_for_ssh "${options[@]}" || return
             fi
 
             ssh "${options[@]}" "$@"
+
             break
             ;;
         stopped)
