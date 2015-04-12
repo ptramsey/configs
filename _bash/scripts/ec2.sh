@@ -47,6 +47,8 @@ _ec2_usage() {
     ssh 2>&1 | sed 's#^usage: ssh#usage: ec2#g' | sed 's#\[user@\]hostname#[user@]instance-name#' >&2
 }
 
+_EC2_WAIT_TIME=2
+
 # Fetch instance information from the ec2 api.  Fail if more than one matching instance is found.
 _ec2_get_instance() {
     local query="Reservations[*].Instances[*].[InstanceId,\
@@ -82,7 +84,7 @@ _ec2_get_instance() {
 
 _wait_for_ssh() {
     for i in {0..10}; do
-        sleep $wait_time
+        sleep $_EC2_WAIT_TIME
         ssh -q "${options[@]}" true && break
     done
     ssh "${options[@]}" true
@@ -96,7 +98,6 @@ ec2() {
     local options=()
     local starting=
     local username=${DEFAULT_EC2_USERNAME:-$(whoami)}
-    local wait_time=2
 
     local OPTIND
     while getopts "$_ssh_argspec" opt; do
@@ -140,7 +141,7 @@ ec2() {
             test -n "$starting" || echo -n "Starting $instance_name..."
             starting=1
 
-            sleep $wait_time
+            sleep $_EC2_WAIT_TIME
             echo -n "."
             ;;
         *)
