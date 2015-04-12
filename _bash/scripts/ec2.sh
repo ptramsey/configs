@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright (c) Patrick Taylor Ramsey, All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without
@@ -19,39 +20,77 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Implements a wrapper around ssh, which automatically looks up/starts an
-# instance by name before connecting to it.
+# ec2.sh - Implements a wrapper around ssh, which automatically looks up/starts an
+#          instance by name before connecting to it.
 
+# Parses the openssh client's usage information to produce an option string for 'getopt'
 _get_ssh_args() {
     set $(ssh 2>&1 | tr -d '[]')
     shift 2
 
-    echo -n $1 | tr -d - | sed 's/\(.\)/\1,/g'
+    echo -n $1 | tr -d -
     shift
 
     while test -n "$1"; do
-        echo "$1" | egrep -q '^-' && echo -n "$1:," | tr -d -
+        echo "$1" | egrep -q '^-' && echo -n "$1:" | tr -d -
         shift
     done
+
+    echo
 }
 
 _ssh_argspec=$(_get_ssh_args)
 
+# Print usage information: same as for 'ssh', except that the ec2 instance name or id takes the place
+# of the hostname
 _ec2_usage() {
     ssh 2>&1 | sed 's#^usage: ssh#usage: ec2#g' | sed 's#\[user@\]hostname#[user@]instance-name#' >&2
 }
 
+# Fetch instance information from the ec2 api.  Fail if more than one matching instance is found.
+_ec2_get_instance() {
+    query="Reservations[*].Instances[*].[InstanceId,\
+                                         InstanceType,\
+                                         Placement.AvailabilityZone,\
+                                         State.Name,\
+                                         PublicDnsName]"
+    instance_name="$1"
+
+    IFS=$'\n' read -d '' -r -a instances < <(
+        aws ec2 describe-instances --filters Name=tag:Name,Values="$instance_name" \
+                                   --output text --query "$query")
+
+    if test ${#instances[@]} -eq 0 && echo "$instance_name" | egrep -q '^i-'; then
+        # Maybe it was an instance id, not a tag!
+        IFS=$'\n' read -d '' -r -a instances < <(
+            aws ec2 describe-instances --instance-ids "$instance_name" \
+                                       --output text --query "$query")
+    fi
+
+    if test ${#instances[@]} -eq 0; then
+        echo >&2 "No instances could be found by that name."
+        return 1
+    elif test ${#instances[@]} -gt 1; then
+        echo >&2 "More than one instance exists by that name:"
+        printf >&2 '%s\n' "${instances[@]}"
+        return 1
+    fi
+
+    echo "${instances[0]}"
+}
+
+# SSH workalike.  Finds the instance, turns it on iff it's powered off, then connects
+# to it.
 ec2() {
     options=()
-    query='Reservations[*].Instances[*].[InstanceId,State.Name,PublicDnsName]'
     starting=
     username=${DEFAULT_EC2_USERNAME:-$(whoami)}
     wait_time=2
 
-    test -z "$*" && { _ec2_usage; return 1; }
+    test -z "$*" && { _ec2_usage; return; }
 
     parsed_opts=$(getopt -o "$_ssh_argspec" -- "$@")
-    test $? -ne 0 && { _ec2_usage; return 1; }
+    test $? -ne 0 && { _ec2_usage; return; }
 
     eval set -- "$parsed_opts"
     while test "$1" != "--"; do
@@ -68,23 +107,8 @@ ec2() {
     shift
 
     while true; do
-        exec {ec2}< <(aws ec2 describe-instances --filters Name=tag:Name,Values="$instance_name" \
-                                                 --output text \
-                                                 --query "$query")
-        read instance_id state hostname <&$ec2
-
-        if read <&$ec2; then
-            echo "More than one instance exists by that name:"
-            echo -n "$instance_id "
-            echo -n "$(echo $REPLY | awk '{print $1;}') "
-            while read instance_id state hostname <&$ec2; do
-                echo -n "$instance_id "
-            done
-            echo
-            return 1
-        fi
-
-        exec {ec2}<&-
+        instance=$(_ec2_get_instance "$instance_name") || return
+        read instance_id size az state hostname <<< "$instance"
 
         case $state in
         running)
