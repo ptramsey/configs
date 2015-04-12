@@ -60,7 +60,7 @@ _ec2_get_instance() {
         aws ec2 describe-instances --filters Name=tag:Name,Values="$instance_name" \
                                    --output text --query "$query")
 
-    if test ${#instances[@]} -eq 0 && echo "$instance_name" | egrep -q '^i-'; then
+    if test ${#instances[@]} -eq 0 && egrep -q '^i-' <<< "$instance_name"; then
         # Maybe it was an instance id, not a tag!
         IFS=$'\n' read -d '' -r -a instances < <(
             aws ec2 describe-instances --instance-ids "$instance_name" \
@@ -89,20 +89,18 @@ ec2() {
 
     test -z "$*" && { _ec2_usage; return; }
 
-    parsed_opts=$(getopt -o "$_ssh_argspec" -- "$@")
-    test $? -ne 0 && { _ec2_usage; return; }
-
-    eval set -- "$parsed_opts"
-    while test "$1" != "--"; do
+    OPTIND=1
+    while getopts "$_ssh_argspec" opt; do
+        test $opt = "?" && { _ec2_usage; return; }
         options+=("$1")
-        shift
+        test -n "$OPTARG" && options+=("$OPTARG")
     done
-    shift
+    shift $((OPTIND-1))
 
     instance_name="$1"
-    if echo "$instance_name" | grep -q '@'; then
-        username=$(echo "$instance_name" | cut -d@ -f 1)
-        instance_name=$(echo "$instance_name" | cut -d@ -f 2-)
+    if grep -q '@' <<< "$instance_name"; then
+        username=$(cut -d@ -f1 <<< "$instance_name")
+        instance_name=$(cut -d@ -f 2- <<< "$instance_name")
     fi
     shift
 
