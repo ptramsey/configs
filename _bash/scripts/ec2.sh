@@ -25,16 +25,13 @@
 
 # Parses the openssh client's usage information to produce an option string for 'getopt'
 _get_ssh_args() {
-    set $(ssh 2>&1 | tr -d '[]')
-    shift 2
+    local ssh_usage=$(ssh 2>&1)
 
-    echo -n $1 | tr -d -
-    shift
+    # No argument options
+    printf '%s\n' $ssh_usage | egrep '\[-..' | sed 's/[][-]//g' | tr -d '\n'
 
-    while test -n "$1"; do
-        echo "$1" | egrep -q '^-' && echo -n "$1:" | tr -d -
-        shift
-    done
+    # Options with arguments
+    printf '%s\n' $ssh_usage | egrep '\[-.$' | sed 's/^\[-\(\w\)/\1:/' | tr -d '\n'
 
     echo
 }
