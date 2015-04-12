@@ -49,26 +49,12 @@ _ec2_usage() {
 
 _EC2_WAIT_TIME=2
 
-# Fetch instance information from the ec2 api.  Fail if more than one matching instance is found.
+# Look up an instance by tag or id.  Fail if more than one matching instance is found.
 _ec2_get_instance() {
-    local query="Reservations[*].Instances[*].[InstanceId,\
-                                               InstanceType,\
-                                               Placement.AvailabilityZone,\
-                                               State.Name,\
-                                               PublicDnsName]"
     local instance_name="$1"
-    local instances
+    local -a instances
 
-    IFS=$'\n' read -d '' -r -a instances < <(
-        aws ec2 describe-instances --filters Name=tag:Name,Values="$instance_name" \
-                                   --output text --query "$query")
-
-    if test ${#instances[@]} -eq 0 && egrep -q '^i-' <<< "$instance_name"; then
-        # Maybe it was an instance id, not a tag!
-        IFS=$'\n' read -d '' -r -a instances < <(
-            aws ec2 describe-instances --instance-ids "$instance_name" \
-                                       --output text --query "$query")
-    fi
+    IFS=$'\n' read -d '' -r -a instances < <(ec2-lookup "$instance_name")
 
     if test ${#instances[@]} -eq 0; then
         echo >&2 "No instances could be found by that name."
@@ -82,6 +68,7 @@ _ec2_get_instance() {
     echo "${instances[0]}"
 }
 
+# Wait for a successful ssh connection
 _wait_for_ssh() {
     for i in {0..10}; do
         sleep $_EC2_WAIT_TIME
@@ -158,4 +145,28 @@ ec2-setname() {
         return 1;
     fi
     aws ec2 create-tags --resources "$1" --tags Key=Name,Value="$2"
+}
+
+# Look up instances by tag or id and output useful information
+ec2-lookup() {
+    local query="Reservations[*].Instances[*].[InstanceId,\
+                                               InstanceType,\
+                                               Placement.AvailabilityZone,\
+                                               State.Name,\
+                                               PublicDnsName]"
+    local instance_name="$1"
+    local by_id=
+
+    if test "${instance_name:0:2}" = "i-"; then
+        # Lookup by instance id
+        by_id=$(aws ec2 describe-instances --instance-ids "$instance_name" \
+                                           --output text --query "$query")
+        echo "$by_id"
+    fi
+
+    if test -z "$by_id"; then
+        # Lookup by tag
+        aws ec2 describe-instances --filters Name=tag:Name,Values="$instance_name" \
+                                   --output text --query "$query"
+    fi
 }
