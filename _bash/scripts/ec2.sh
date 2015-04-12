@@ -94,15 +94,14 @@ _wait_for_ssh() {
 # SSH workalike.  Finds the instance, turns it on iff it's powered off, then connects
 # to it.
 ec2() {
+    test -z "$*" && { _ec2_usage; return; }
+
     local options=()
     local starting=
     local username=${DEFAULT_EC2_USERNAME:-$(whoami)}
     local wait_time=2
-    local instance instance_name instance_id size az state hostname
 
-    test -z "$*" && { _ec2_usage; return; }
-
-    OPTIND=1
+    local OPTIND
     while getopts "$_ssh_argspec" opt; do
         test $opt = "?" && { _ec2_usage; return; }
         options+=("$1")
@@ -110,7 +109,7 @@ ec2() {
     done
     shift $((OPTIND-1))
 
-    instance_name="$1"
+    local instance_name="$1"
     if grep -q '@' <<< "$instance_name"; then
         username=$(cut -d@ -f1 <<< "$instance_name")
         instance_name=$(cut -d@ -f 2- <<< "$instance_name")
@@ -118,6 +117,7 @@ ec2() {
     shift
 
     while true; do
+        local instance instance_id size az state hostname
         instance=$(_ec2_get_instance "$instance_name") || return
         read instance_id size az state hostname <<< "$instance"
 
