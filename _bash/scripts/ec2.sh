@@ -126,7 +126,7 @@ ec2() {
             options+=("${username}@${hostname}")
 
             if test -n "$starting"; then
-                echo "Instance started.  Trying to connect..."
+                echo >&2 "Instance started.  Trying to connect..."
                 _wait_for_ssh "${options[@]}" || return
             fi
 
@@ -137,14 +137,14 @@ ec2() {
             aws ec2 start-instances --instance-ids $instance_id >/dev/null
             ;&
         pending)
-            test -n "$starting" || echo -n "Starting $instance_name..."
+            test -n "$starting" || echo >&2 -n "Starting $instance_name..."
             starting=1
 
             sleep $_EC2_WAIT_TIME
-            echo -n "."
+            echo >&2 -n "."
             ;;
         *)
-            echo "Instance is in state $state; can't connect"
+            echo >&2 "Instance is in state '$state'; can't connect"
             return 1
             ;;
         esac
