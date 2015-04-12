@@ -39,7 +39,7 @@ _get_ssh_args() {
     echo
 }
 
-_ssh_argspec=$(_get_ssh_args)
+_SSH_ARGSPEC=$(_get_ssh_args)
 
 # Print usage information: same as for 'ssh', except that the ec2 instance name or id takes the place
 # of the hostname
@@ -87,7 +87,7 @@ ec2() {
     local username=${DEFAULT_EC2_USERNAME:-$(whoami)}
 
     local OPTIND
-    while getopts "$_ssh_argspec" opt; do
+    while getopts "$_SSH_ARGSPEC" opt; do
         test $opt = "?" && { _ec2_usage; return; }
         options+=("$1")
         test -n "$OPTARG" && options+=("$OPTARG")
