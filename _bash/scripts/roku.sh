@@ -37,7 +37,7 @@ _roku_keyboard() {(
     done
 )}
 
-roku() {
+_roku() {
     for ii in $(seq 1 $2); do
         case "$1" in
             kb|keyboard) _roku_keyboard ;;
@@ -52,6 +52,16 @@ roku() {
             *) _roku_keypress "$1" ;;
         esac
     done
+}
+
+roku() {
+    if test -n "$1"; then
+        _roku "$@"
+    else
+        while read -a cmd; do
+            _roku  "${cmd[@]}"
+        done
+    fi
 }
 
 alias r='roku'
