@@ -1,0 +1,7 @@
+[color]
+	ui = auto
+[user]
+	name = Patrick Taylor Ramsey
+	email = ptr@fivestars.com
+[alias]
+	pr = "!f() { origin=$(git remote | head -1); set ${1:-$origin}; default=$(echo $1 | grep $origin); git fetch $1 +refs/pull/*/head:refs/pr/$1/* ${default:++refs/pull/*/head:refs/pr/*}; }; f"
