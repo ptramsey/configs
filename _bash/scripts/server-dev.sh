@@ -5,6 +5,6 @@ server-dev() {
         sudo docker start server-dev
         sudo docker attach server-dev
     else
-        sudo docker run -i -t --name=server-dev -v /big:/big ptr:fs-server-dev /bin/bash -il
+        sudo docker run -i -t -p 8000:8000 --name=server-dev -v /big:/big ptr:fs-server-dev /bin/bash -il
     fi
 }
