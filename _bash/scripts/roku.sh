@@ -47,7 +47,7 @@ _roku() {
             u) _roku_keypress up ;;
             d) _roku_keypress down ;;
             pause) _roku_keypress 'play' ;;
-            p) _roku_keypress 'play' ;;
+            p|"") _roku_keypress 'play' ;;
             ok) _roku_keypress 'select' ;;
             *) _roku_keypress "$1" ;;
         esac
