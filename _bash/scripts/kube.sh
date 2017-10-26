@@ -5,15 +5,17 @@ _get_pod() {
 }
 
 _local_shell() {
-    kubectl exec -it $(_get_pod "$1") -c "$2" /bin/bash -i
+    pod=$(_get_pod "$1")
+    container="$1${2:+-$2}"
+    kubectl exec -it "$pod" -c "$container" /bin/bash -i || kubectl exec -it "$pod" -c "$container" /bin/sh -i
 }
 
 receipt() {
-    _local_shell "receipt" "receipt"
+    _local_shell "receipt"
 }
 
 receipt-test() {
-    _local_shell "receipt" "receipt-test"
+    _local_shell "receipt" "test"
 }
 
 alias lcl="_local_shell"
