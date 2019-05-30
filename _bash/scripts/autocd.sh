@@ -36,6 +36,16 @@
 # stderr restored) from $PROMT_COMMAND, which executes before the next
 # prompt is shown.
 
+READLINK=readlink
+if which greadlink > /dev/null; then
+    READLINK=greadlink
+fi
+
+CUT=cut
+if which gcut > /dev/null; then
+    CUT=gcut
+fi
+
 pushd() {
     command pushd "$@" && unset _forwards
 }
@@ -93,7 +103,7 @@ prep_autocd() {
 
     # If the command doesn't exist, but a directory by that name does,
     if ! command -v "$1" >/dev/null && test -d "$1" && test -z "$_autocd_dir"; then
-        echo -e "\033[01;32mautocd:\033[0m $(readlink -f "$1")";
+        echo -e "\033[01;32mautocd:\033[0m $($READLINK -f "$1")";
 
         # Store the fact that we're in an autocd,
         _autocd_dir="$1"
@@ -125,7 +135,7 @@ parse_argv() {
 }
 
 autocd_hook() {
-    prep_autocd "$(parse_argv "$*" | cut -d '' -f 1)"
+    prep_autocd "$(parse_argv "$*" | $CUT -d '' -f 1)"
 }
 
 trap 'autocd_hook "$BASH_COMMAND"' DEBUG

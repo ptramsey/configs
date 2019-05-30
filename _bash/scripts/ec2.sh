@@ -23,6 +23,11 @@
 # ec2.sh - Implements a wrapper around ssh, which automatically looks up/starts an
 #          instance by name before connecting to it.
 
+CUT=cut
+if which gcut > /dev/null; then
+    CUT=gcut
+fi
+
 # Parses the openssh client's usage information to produce an option string for 'getopt'
 _get_ssh_args() {
     printf '%s\n' $(ssh 2>&1) | sed -n '/^\[-\w$/ s/^\[-\(\w\)/\1:/p
@@ -87,8 +92,8 @@ ec2() {
 
     local instance_name="$1"
     if grep -q '@' <<< "$instance_name"; then
-        username=$(cut -d@ -f1 <<< "$instance_name")
-        instance_name=$(cut -d@ -f 2- <<< "$instance_name")
+        username=$($CUT -d@ -f1 <<< "$instance_name")
+        instance_name=$($CUT -d@ -f 2- <<< "$instance_name")
     fi
     shift
 
